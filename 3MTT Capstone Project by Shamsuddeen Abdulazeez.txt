@@ -1,0 +1,65 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly.express as px
+
+# Load the COVID-19 dataset
+data = pd.read_csv("/kaggle/input/corona-virus-report/covid_19_clean_complete.csv")
+
+# Handle missing values
+data.fillna(method='ffill', inplace=True)
+
+# Convert date column to datetime format
+data['Date'] = pd.to_datetime(data['Date'])
+
+# Check for outliers and inconsistencies
+# ... (Use statistical methods or visualization techniques)
+
+# Feature engineering
+data['Daily_Cases'] = data['Confirmed'].diff()
+data['Mortality_Rate'] = data['Deaths'] / data['Confirmed']
+# Time series plot of confirmed cases
+plt.figure(figsize=(12, 6))
+plt.plot(data['Date'], data['Confirmed'])
+plt.xlabel('Date')
+plt.ylabel('Confirmed Cases')
+plt.title('COVID-19 Cases Over Time')
+plt.show()
+
+
+
+# Calculate the count of cases by country
+country_counts = data['Country/Region'].value_counts().reset_index()
+country_counts.columns = ['Country/Region', 'Count']
+
+# Calculate IQR to find outliers
+Q1 = country_counts['Count'].quantile(0.25)
+Q3 = country_counts['Count'].quantile(0.75)
+IQR = Q3 - Q1
+
+# Define outliers
+outliers = country_counts[(country_counts['Count'] < (Q1 - 1.5 * IQR)) | (country_counts['Count'] > (Q3 + 1.5 * IQR))]
+
+# Plot only outliers using matplotlib
+plt.figure(figsize=(12, 6))
+plt.scatter(outliers['Country/Region'], outliers['Count'], color='red')
+plt.xticks(rotation=45)
+plt.xlabel('Country/Region')
+plt.ylabel('Count')
+plt.title('Outliers in Distribution of Cases by Country')
+plt.show()
+
+
+
+
+# Exclude 'long' and 'lat' columns
+filtered_data = data.drop(columns=['Long', 'Lat'])
+
+# Correlation matrix
+corr_matrix = filtered_data.corr(numeric_only=True)
+sns.heatmap(corr_matrix, annot=True)
+plt.title('Correlation Matrix')
+plt.show()
+
+
